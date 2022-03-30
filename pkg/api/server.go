@@ -9,9 +9,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/gorilla/handlers"
+	gorilla_handlers "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/pableeee/fo-aas/pkg/foaas"
+	"github.com/pableeee/fo-aas/pkg/api/handlers"
 	"github.com/pableeee/fo-aas/pkg/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
@@ -52,7 +52,7 @@ func (s *Server) registerHandlers(ctx context.Context) {
 	s.registerMiddlewares(domainSubrouter)
 
 	// register domain endpoints
-	domainSubrouter.HandleFunc("/message", foaas.NewHandler()).Methods("GET")
+	domainSubrouter.Handle("message", handlers.NewMessageHandler()).Methods("GET")
 }
 
 func (s *Server) JSONResponse(w http.ResponseWriter, r *http.Request, result interface{}, responseCode int) {
@@ -73,7 +73,7 @@ func (s *Server) registerMiddlewares(router *mux.Router) {
 	// logging middleware
 	router.Use(
 		func(h http.Handler) http.Handler {
-			return handlers.LoggingHandler(os.Stdout, h)
+			return gorilla_handlers.LoggingHandler(os.Stdout, h)
 		},
 	)
 
