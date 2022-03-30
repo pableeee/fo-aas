@@ -49,4 +49,5 @@ func Run() {
 		return srv.ListenAndServe(ctx)
 	})
 
+	logger.Infof("exit: %s", group.Run())
 }
