@@ -36,7 +36,7 @@ func PrometheusMetricsMiddleware(host string) *MetricsMiddleware {
 			Name:      "requests_total",
 			Help:      "The total number of HTTP requests.",
 		},
-		[]string{"status", "hostname"},
+		[]string{"status", "hostname", "path"},
 	)
 
 	return &MetricsMiddleware{
@@ -53,8 +53,8 @@ func (p *MetricsMiddleware) Handler(next http.Handler) http.Handler {
 			metrics = httpsnoop.CaptureMetrics(next, w, r)
 			status  = strconv.Itoa(metrics.Code)
 		)
-		p.Histogram.With(r.Method, path, status, p.host).Observe(metrics.Duration.Seconds())
-		p.Counter.With(status, p.host).Add(1)
+		p.Histogram.With("method", r.Method, "path", path, "status", status, "hostname", p.host).Observe(metrics.Duration.Seconds())
+		p.Counter.With("status", status, "hostname", p.host, "path", path).Add(1)
 	})
 }
 
