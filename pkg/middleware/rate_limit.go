@@ -2,13 +2,12 @@ package middleware
 
 import (
 	"net/http"
-	"time"
 
-	"golang.org/x/time/rate"
+	"github.com/pableeee/fo-aas/pkg/ratelimiter"
 )
 
 type RateLimiter interface {
-	Allow() bool
+	Allow(user string) bool
 }
 
 type RateLimiterMiddleware struct {
@@ -18,13 +17,21 @@ type RateLimiterMiddleware struct {
 // NewRateLimiterMiddleware creates a new http middleware that honors the provided limit.
 func NewRateLimiterMiddleware(maxRMP int) *RateLimiterMiddleware {
 	return &RateLimiterMiddleware{
-		limiter: rate.NewLimiter(rate.Every(time.Minute/time.Duration(maxRMP)), 1),
+		limiter: ratelimiter.New(maxRMP),
 	}
 }
 
 func (p *RateLimiterMiddleware) Handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !p.limiter.Allow() {
+		values := r.URL.Query()
+		user, found := values["user"]
+		if !found {
+			w.WriteHeader(http.StatusBadRequest)
+
+			return
+		}
+
+		if !p.limiter.Allow(user[0]) {
 			w.WriteHeader(http.StatusTooManyRequests)
 
 			return
