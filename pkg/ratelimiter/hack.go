@@ -1,7 +1,6 @@
 package ratelimiter
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/stretchr/testify/mock"
@@ -27,12 +26,7 @@ type clockMock struct {
 func (c *clockMock) Now() *time.Time {
 	args := c.Called()
 
-	t, ok := args.Get(0).(*time.Time)
-	if !ok {
-		panic(0)
-	}
-
-	fmt.Printf("mock %s \n", t.String())
+	t, _ := args.Get(0).(*time.Time)
 
 	return t
 }

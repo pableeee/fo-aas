@@ -29,7 +29,7 @@ func mockClock(limiter *TokenRateLimiter, date string) {
 }
 
 func TestRateLimiter_FirstRequest(t *testing.T) {
-	// 5 requests per second limit
+	// 10 requests per second limit
 	limiter := New(10)
 
 	mockClock(limiter, "2000-01-01T00:00:00.000Z")
@@ -52,7 +52,7 @@ func TestRateLimiter_LimitReachead(t *testing.T) {
 		assert.True(t, limiter.Allow("pable"))
 	}
 
-	// the 11th token withing the same second, musn't be allowed.
+	// the 11th token withing a second, musn't be allowed.
 	mockClock(limiter, "2000-01-01T00:00:00.210Z")
 	// user is throttled
 	assert.False(t, limiter.Allow("pable"))
@@ -68,7 +68,7 @@ func TestRateLimiter_ReachLimit_SameTS(t *testing.T) {
 	}
 
 	// the 11th token withing the same second, musn't be allowed.
-	mockClock(limiter, "2000-01-01T00:00:00.200Z")
+	mockClock(limiter, "2000-01-01T00:00:00.100Z")
 	// user is throttled
 	assert.False(t, limiter.Allow("pable"))
 }
@@ -91,7 +91,7 @@ func TestRateLimiter_AllowedAfterBlocked(t *testing.T) {
 	assert.False(t, limiter.Allow("pable"))
 
 	// one second after the first event, the session shoud have expired.
-	// up to 10 tokens more have to be availble again
+	// up to extra 10 have to be available again
 	for i := 0; i < 10; i++ {
 		date := fmt.Sprintf("2000-01-01T00:00:01.%d00Z", i)
 		mockClock(limiter, date)

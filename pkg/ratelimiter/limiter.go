@@ -1,7 +1,6 @@
 package ratelimiter
 
 import (
-	"fmt"
 	"sync"
 	"time"
 )
@@ -9,8 +8,6 @@ import (
 type tokenCount struct {
 	// when the user was first seen
 	firstSeen *time.Time
-	// when the user was first seen
-	expires time.Time
 	// amount of tokens left
 	tokens int
 }
@@ -27,14 +24,14 @@ func New(rps int) *TokenRateLimiter {
 	return &TokenRateLimiter{
 		mutex: &sync.Mutex{},
 		users: make(map[string]tokenCount),
-		//every: time.Duration(time.Second / time.Duration(rps)),
 		every: time.Duration(time.Second),
 		limit: rps,
 		clk:   new(defaultClock),
 	}
 }
 
-// Allow enforces the the rate limit, by consuming tokens
+// Allow enforces a rate limit of N tokens per session.
+// Sessions are 1 sec long.
 func (t *TokenRateLimiter) Allow(user string) bool {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
@@ -43,7 +40,7 @@ func (t *TokenRateLimiter) Allow(user string) bool {
 	count, found := t.users[user]
 
 	if !found || now.Sub(*count.firstSeen) >= t.every {
-		// since the session expired, we refresh the tokens
+		// since the session expired (or didn't exist), we refresh the tokens
 		// minus this current request.
 		t.users[user] = tokenCount{
 			firstSeen: now,
@@ -52,10 +49,6 @@ func (t *TokenRateLimiter) Allow(user string) bool {
 
 		return true
 	}
-
-	fmt.Printf("first seen %s", count.firstSeen.String())
-	since := now.Sub(*count.firstSeen)
-	fmt.Printf("%d > %d :%+v \n", since, t.every, now.Sub(*count.firstSeen) > t.every)
 
 	if count.tokens == 0 {
 		return false
