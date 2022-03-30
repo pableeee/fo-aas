@@ -23,10 +23,10 @@ func NewRateLimiterMiddleware(maxRMP int) *RateLimiterMiddleware {
 
 func (p *RateLimiterMiddleware) Handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		values := r.URL.Query()
-		user, found := values["user"]
+		values := r.Header
+		user, found := values["User"]
 		if !found {
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusUnauthorized)
 
 			return
 		}
