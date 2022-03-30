@@ -10,44 +10,25 @@ import (
 	"time"
 
 	"github.com/eapache/go-resiliency/breaker"
-	"golang.org/x/time/rate"
 )
 
 var (
-	ErrNotFound        = errors.New("user not found")
+	ErrNotFound        = errors.New("not found")
 	ErrTooManyRequests = errors.New("too many requests")
-	ErrUnknownError    = errors.New("unknown error")
-	ErrCircuitOpen     = errors.New("circuit open")
 )
 
-type RateLimiter interface {
-	Wait(ctx context.Context) (err error)
-}
-
-// dummy rate limiter, used when no limits are specified.
-type dummyLimiter int
-
-func (n *dummyLimiter) Wait(ctx context.Context) (err error) {
-	if ctx.Err() != nil {
-		return ctx.Err()
-	}
-
-	return nil
-}
-
 type Options struct {
-	URL     string
-	Method  string
-	Body    io.Reader
-	Headers map[string]string
-	MaxRPM  int
+	MaxRPM int
+}
+
+type httpClient interface {
+	Do(req *http.Request) (*http.Response, error)
 }
 
 type Client struct {
-	options     Options
-	ratelimiter RateLimiter
-	client      *http.Client
-	cb          *breaker.Breaker
+	options Options
+	client  httpClient
+	cb      *breaker.Breaker
 }
 
 func New(opt *Options) *Client {
@@ -64,23 +45,12 @@ func New(opt *Options) *Client {
 
 	v.client = &http.Client{Transport: tr}
 
-	if opt.MaxRPM > 0 {
-		v.ratelimiter = rate.NewLimiter(rate.Every(time.Minute/time.Duration(opt.MaxRPM)), 1)
-	} else {
-		v.ratelimiter = new(dummyLimiter)
-	}
-
 	return v
 }
 
 func (c *Client) do(ctx context.Context, req *http.Request) (*http.Response, error) {
-	// This is a blocking call only if limit is defined, to honor the rate limit
-	err := c.ratelimiter.Wait(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	var resp *http.Response
+	var err error
 
 	// do the http request inside the CB scope
 	err = c.cb.Run(func() error {
@@ -89,54 +59,35 @@ func (c *Client) do(ctx context.Context, req *http.Request) (*http.Response, err
 		return err
 	})
 
-	// check for cb errors, and replace error
+	// check for cb errors, and replace error to avoid leaking impl details.
 	if err != nil {
 		if errors.Is(err, breaker.ErrBreakerOpen) {
-			err = ErrCircuitOpen
+			// TODO: track circuit open metrics
 		}
 
-		return nil, err
+		return nil, fmt.Errorf("request failed %w", err)
 	}
 
 	return resp, nil
 }
 
-func (c *Client) getBody(resp *http.Response) (string, error) {
-	switch resp.StatusCode {
-
-	case http.StatusNotFound:
-		return "", ErrNotFound
-
-	case http.StatusTooManyRequests:
-		return "", ErrTooManyRequests
-
-	case http.StatusOK:
-		scanner := bufio.NewScanner(resp.Body)
-		var response string
-		for scanner.Scan() {
-			response += scanner.Text()
-		}
-
-		return response, nil
-
-	default:
-		scanner := bufio.NewScanner(resp.Body)
-		var er string
-		for scanner.Scan() {
-			er += scanner.Text()
-		}
-
-		return er, ErrUnknownError
+func (c *Client) getBody(body io.ReadCloser) (string, error) {
+	scanner := bufio.NewScanner(body)
+	var response string
+	for scanner.Scan() {
+		response += scanner.Text()
 	}
+
+	return response, nil
 }
 
 func (c *Client) Execute(ctx context.Context, method, url string, body io.Reader, headers map[string]string) (string, error) {
-	req, err := http.NewRequestWithContext(ctx, c.options.Method, c.options.URL, c.options.Body)
+	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
 		return "", err
 	}
 
-	for key, value := range c.options.Headers {
+	for key, value := range headers {
 		req.Header.Add(key, value)
 	}
 
@@ -148,13 +99,14 @@ func (c *Client) Execute(ctx context.Context, method, url string, body io.Reader
 	}
 	defer res.Body.Close()
 
-	responseBody, err := c.getBody(res)
+	responseBody, err := c.getBody(res.Body)
 	if err != nil {
 		return "", fmt.Errorf("error status: %d; %s", res.StatusCode, responseBody)
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("error status: %d %s; error: %s", res.StatusCode, c.options.Body, err.Error())
+		err := &Error{Status: res.Status, Code: res.StatusCode, Body: responseBody}
+		return "", fmt.Errorf("request failed %w", err)
 	}
 
 	return responseBody, nil
