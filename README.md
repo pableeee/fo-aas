@@ -2,6 +2,8 @@
 
 fo-aas provide a proxy server to foaas, by connecting and fetching its response. It enforces user based throttling for incomming requests and provides basic RED metrics.
 
+Authorization was out the scope of this implementation, so the applicaiton expects a specific HTTP header `"User"`
+
 ## Building and running the app
 
 The app expects the following flags
@@ -25,7 +27,9 @@ curl 'http://localhost:8080/message' -H "User: pable"
 
 ## Metrics
 
-Local [grafana]( http://localhost:3000/ ) service can be accessed to
+Metrics are published by the app on the `/metrics` endpoint and collected by the prometheus service running on docker.
+
+Local [grafana]( http://localhost:3000/ ) service can be accessed to check the metrics. There's an already simple dashboard built that can be imported under ().
 
 Credentias:
 
