@@ -20,12 +20,12 @@ type TokenRateLimiter struct {
 	clk   clock
 }
 
-func New(rps int) *TokenRateLimiter {
+func New(tokens int, every time.Duration) *TokenRateLimiter {
 	return &TokenRateLimiter{
 		mutex: &sync.Mutex{},
 		users: make(map[string]tokenCount),
-		every: time.Duration(time.Second),
-		limit: rps,
+		every: every,
+		limit: tokens,
 		clk:   new(defaultClock),
 	}
 }

@@ -19,7 +19,8 @@ func Run() {
 		logLevel = flag.String("loglevel", "debug", "logging level threshold")
 		host     = flag.String("host", "0.0.0.0", "listen interface for http server")
 		port     = flag.String("port", "8080", "http server port")
-		limit    = flag.Int("rate-limit", 3000, "http server recv rate limit (req per min)")
+		every    = flag.Int("session-length", 1000, "lenght of the session (ms)")
+		tokens   = flag.Int("tokens", 1000, "tokes availabe per session")
 		group    = run.Group{}
 	)
 
@@ -36,7 +37,8 @@ func Run() {
 		Hostname:                  getOrDefault(hostname, "localhost"),
 		HTTPServerShutdownTimeout: time.Second * 10,
 		HTTPServerTimeout:         time.Second * 10,
-		RateLimit:                 time.Duration(*limit),
+		Every:                     time.Millisecond * time.Duration(*every),
+		Tokens:                    *tokens,
 	}, logger)
 
 	// adds signal handler

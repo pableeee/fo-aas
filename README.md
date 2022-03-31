@@ -4,13 +4,16 @@ fo-aas provide a proxy server to foaas, by connecting and fetching its response.
 
 Authorization was out the scope of this implementation, so the applicaiton expects a specific HTTP header `"User"`
 
+The implementation of the rate limiting is session based. Every user has a quota of tokens (requests), that can be consumed within a session. Sessions have fixed length and on expiration, tokens are re-allocated.
+
 ## Building and running the app
 
 The app expects the following flags
 
 - `host` : listen interface. (def: `"0.0.0.0"`)
 - `port` : port to listen on. (def: `8080`)
-- `rate-limit` : limit to enforce per user, expressed as requests per second. (def: `10` requests per second)
+- `session-length` : amount of time until the session expires in milliseconds  (def: `1000` requests per second)
+- `tokens` : amount of tokens available per user by session (def: `1000`)
 
 ### using docker
 

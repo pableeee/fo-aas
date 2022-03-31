@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/pableeee/fo-aas/pkg/ratelimiter"
 )
@@ -15,8 +16,8 @@ type RateLimiterMiddleware struct {
 }
 
 // NewRateLimiterMiddleware creates a new http middleware that honors the provided limit.
-func NewRateLimiterMiddleware(maxRMP int) *RateLimiterMiddleware {
-	lim := ratelimiter.New(maxRMP)
+func NewRateLimiterMiddleware(tokens int, every time.Duration) *RateLimiterMiddleware {
+	lim := ratelimiter.New(tokens, every)
 	return &RateLimiterMiddleware{
 		limiter: ratelimiter.MewMetricMiddleware(lim),
 	}

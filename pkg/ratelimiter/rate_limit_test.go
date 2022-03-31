@@ -30,7 +30,7 @@ func mockClock(limiter *TokenRateLimiter, date string) {
 
 func TestRateLimiter_FirstRequest(t *testing.T) {
 	// 10 requests per second limit
-	limiter := New(10)
+	limiter := New(10, time.Second)
 
 	mockClock(limiter, "2000-01-01T00:00:00.000Z")
 
@@ -43,7 +43,7 @@ func TestRateLimiter_FirstRequest(t *testing.T) {
 
 func TestRateLimiter_LimitReachead(t *testing.T) {
 	// 10 requests per second limit
-	limiter := New(10)
+	limiter := New(10, time.Second)
 
 	// a session for a user should allow up to 10 tokens.
 	// "2000-01-01T00:00:00.100Z" being when the user was first seen.
@@ -59,7 +59,7 @@ func TestRateLimiter_LimitReachead(t *testing.T) {
 }
 
 func TestRateLimiter_ReachLimit_SameTS(t *testing.T) {
-	limiter := New(10)
+	limiter := New(10, time.Second)
 
 	// a limit of 10 tokens should be allowed on a second
 	for i := 0; i < 10; i++ {
@@ -75,7 +75,7 @@ func TestRateLimiter_ReachLimit_SameTS(t *testing.T) {
 
 func TestRateLimiter_AllowedAfterBlocked(t *testing.T) {
 	// 10 requests per second limit
-	limiter := New(10)
+	limiter := New(10, time.Second)
 
 	// a limit of 10 tokens should be allowed on a second
 	for i := 0; i < 10; i++ {
@@ -102,7 +102,7 @@ func TestRateLimiter_AllowedAfterBlocked(t *testing.T) {
 
 func TestRateLimiter_ReachLimit_AllowedOtherUser(t *testing.T) {
 	// 10 requests per second limit
-	limiter := New(10)
+	limiter := New(10, time.Second)
 
 	// a limit of 10 tokens should be allowed on a second
 	for i := 0; i < 10; i++ {

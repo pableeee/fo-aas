@@ -33,5 +33,5 @@ coverage-html: test
 lint:
 	@golangci-lint run
 
-run: start-deps
-	@docker run -p 8080:8080 -d fo-aas -rate-limit 10
+run: build-docker start-deps
+	@docker run -p 8080:8080 -d fo-aas -session-length 1000 -tokens 10

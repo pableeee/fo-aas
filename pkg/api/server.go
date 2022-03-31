@@ -30,7 +30,8 @@ type Config struct {
 	Host                      string
 	Port                      string
 	Hostname                  string
-	RateLimit                 time.Duration
+	Tokens                    int
+	Every                     time.Duration
 }
 
 func NewServer(c *Config, l *log.Logger) *Server {
@@ -82,7 +83,7 @@ func (s *Server) registerMiddlewares(router *mux.Router) {
 	router.Use(prom.Handler)
 
 	// rate limiting middleware
-	limiter := middleware.NewRateLimiterMiddleware(int(s.config.RateLimit))
+	limiter := middleware.NewRateLimiterMiddleware(s.config.Tokens, s.config.Every)
 	router.Use(limiter.Handler)
 }
 
