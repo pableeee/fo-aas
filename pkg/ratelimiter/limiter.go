@@ -31,7 +31,6 @@ func New(tokens int, every time.Duration) *TokenRateLimiter {
 }
 
 // Allow enforces a rate limit of N tokens per session.
-// Sessions are 1 sec long.
 func (t *TokenRateLimiter) Allow(user string) bool {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
