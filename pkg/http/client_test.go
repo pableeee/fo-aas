@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -30,7 +31,7 @@ func (c *clientMock) Do(req *http.Request) (*http.Response, error) {
 
 func Test_HostUnavailable(t *testing.T) {
 	m := &clientMock{}
-	cl := New(&Options{MaxRPM: 30})
+	cl := New(&Options{}, logrus.New())
 	cl.client = m
 
 	m.On("Do", mock.Anything).
@@ -43,7 +44,7 @@ func Test_HostUnavailable(t *testing.T) {
 
 func Test_Available(t *testing.T) {
 	m := &clientMock{}
-	cl := New(&Options{MaxRPM: 30})
+	cl := New(&Options{}, logrus.New())
 	cl.client = m
 
 	pingResponse := `{"status":"ok","code":200}`
@@ -64,7 +65,7 @@ func Test_Available(t *testing.T) {
 
 func Test_RequestFail(t *testing.T) {
 	m := &clientMock{}
-	cl := New(&Options{MaxRPM: 30})
+	cl := New(&Options{}, logrus.New())
 	cl.client = m
 
 	pingResponse := `{"status":"StatusInternalServerError","code":500}`

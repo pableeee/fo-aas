@@ -35,10 +35,6 @@ type Service struct {
 func New(logger *log.Logger) *Service {
 	return &Service{
 		client: http_client.New(&http_client.Options{
-			// CB config
-			ErrorThreshold:   5,
-			SuccessThreshold: 1,
-			Timeout:          10 * time.Second,
 			// Transport config
 			MaxIdleConns:        100,
 			MaxConnsPerHost:     1000,
