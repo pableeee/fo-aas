@@ -21,6 +21,7 @@ func Run() {
 		port     = flag.String("port", "8080", "http server port")
 		every    = flag.Int("session-length", 1000, "lenght of the session (ms)")
 		tokens   = flag.Int("tokens", 1000, "tokes availabe per session")
+		timeout  = flag.Int("timeout", 3000, "connection timeout duration for request to foaas service (ms)")
 		group    = run.Group{}
 	)
 
@@ -39,6 +40,7 @@ func Run() {
 		HTTPServerTimeout:         time.Second * 10,
 		Every:                     time.Millisecond * time.Duration(*every),
 		Tokens:                    *tokens,
+		Timeout:                   time.Millisecond * time.Duration(*timeout),
 	}, logger)
 
 	// adds signal handler

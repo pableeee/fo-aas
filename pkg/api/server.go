@@ -32,6 +32,7 @@ type Config struct {
 	Hostname                  string
 	Tokens                    int
 	Every                     time.Duration
+	Timeout                   time.Duration
 }
 
 func NewServer(c *Config, l *log.Logger) *Server {
@@ -53,7 +54,11 @@ func (s *Server) registerHandlers(ctx context.Context) {
 	s.registerMiddlewares(domainSubrouter)
 
 	// register domain endpoints
-	domainSubrouter.Handle("/message", handlers.NewMessageHandler(s.logger)).Methods("GET")
+	domainSubrouter.Handle("/message",
+		handlers.NewMessageHandler(
+			&handlers.Options{Timeout: s.config.Timeout}, s.logger,
+		),
+	).Methods("GET")
 }
 
 func (s *Server) JSONResponse(w http.ResponseWriter, r *http.Request, result interface{}, responseCode int) {

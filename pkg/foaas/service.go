@@ -27,15 +27,20 @@ type httpClient interface {
 	Execute(ctx context.Context, method, url string, body io.Reader, headers map[string]string) (string, error)
 }
 
+type Options struct {
+	Timeout time.Duration
+}
+
 type Service struct {
 	client httpClient
 	logger *log.Logger
 }
 
-func New(logger *log.Logger) *Service {
+func New(opt *Options, logger *log.Logger) *Service {
 	return &Service{
 		client: http_client.New(&http_client.Options{
 			// Transport config
+			Timeout:             opt.Timeout,
 			MaxIdleConns:        100,
 			MaxConnsPerHost:     1000,
 			MaxIdleConnsPerHost: 100,

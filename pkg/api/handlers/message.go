@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"time"
 
 	"net/http"
 
@@ -19,9 +20,13 @@ type Service interface {
 	Get(ctx context.Context, user string) (*foaas.Payload, error)
 }
 
-func NewMessageHandler(logger *log.Logger) *MessageHandler {
+type Options struct {
+	Timeout time.Duration
+}
+
+func NewMessageHandler(opt *Options, logger *log.Logger) *MessageHandler {
 	return &MessageHandler{
-		svc:    foaas.New(logger),
+		svc:    foaas.New(&foaas.Options{Timeout: opt.Timeout}, logger),
 		logger: logger,
 	}
 }

@@ -21,7 +21,7 @@ func (c *clientMock) Execute(ctx context.Context, method, url string, body io.Re
 }
 
 func Test_FoaasOK(t *testing.T) {
-	svc := New(logrus.New())
+	svc := New(&Options{}, logrus.New())
 	m := &clientMock{}
 	svc.client = m
 	m.On("Execute", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
@@ -35,7 +35,7 @@ func Test_FoaasOK(t *testing.T) {
 }
 
 func Test_FoaasFailToParse(t *testing.T) {
-	svc := New(logrus.New())
+	svc := New(&Options{}, logrus.New())
 	m := &clientMock{}
 	svc.client = m
 	m.On("Execute", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).

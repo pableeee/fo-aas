@@ -39,7 +39,7 @@ func setup() (*httptest.ResponseRecorder, *http.Request) {
 }
 
 func Test_FoaasUnavailable(t *testing.T) {
-	handler := NewMessageHandler(logrus.New())
+	handler := NewMessageHandler(&Options{}, logrus.New())
 	m := &serviceMock{}
 	handler.svc = m
 
@@ -60,7 +60,7 @@ func Test_FoaasUnavailable(t *testing.T) {
 }
 
 func Test_FoaasOK(t *testing.T) {
-	handler := NewMessageHandler(logrus.New())
+	handler := NewMessageHandler(&Options{}, logrus.New())
 	m := &serviceMock{}
 	handler.svc = m
 

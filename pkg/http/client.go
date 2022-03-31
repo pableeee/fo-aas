@@ -22,6 +22,7 @@ type Options struct {
 	MaxConnsPerHost     int
 	MaxIdleConnsPerHost int
 	IdleConnTimeout     time.Duration
+	Timeout             time.Duration
 }
 
 type httpClient interface {
@@ -35,6 +36,7 @@ type Client struct {
 func New(opt *Options, logger *log.Logger) *Client {
 	return &Client{
 		client: &http.Client{
+			Timeout: opt.Timeout,
 			Transport: &http.Transport{
 				MaxIdleConns:        opt.MaxIdleConns,
 				MaxConnsPerHost:     opt.MaxConnsPerHost,
