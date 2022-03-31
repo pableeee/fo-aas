@@ -5,6 +5,7 @@ import (
 	"io"
 	"testing"
 
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -20,7 +21,7 @@ func (c *clientMock) Execute(ctx context.Context, method, url string, body io.Re
 }
 
 func Test_FoaasOK(t *testing.T) {
-	svc := New()
+	svc := New(logrus.New())
 	m := &clientMock{}
 	svc.client = m
 	m.On("Execute", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
@@ -34,7 +35,7 @@ func Test_FoaasOK(t *testing.T) {
 }
 
 func Test_FoaasFailToParse(t *testing.T) {
-	svc := New()
+	svc := New(logrus.New())
 	m := &clientMock{}
 	svc.client = m
 	m.On("Execute", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).

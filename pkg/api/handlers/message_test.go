@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/pableeee/fo-aas/pkg/foaas"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -38,11 +39,11 @@ func setup() (*httptest.ResponseRecorder, *http.Request) {
 }
 
 func Test_FoaasUnavailable(t *testing.T) {
-	handler := NewMessageHandler()
+	handler := NewMessageHandler(logrus.New())
 	m := &serviceMock{}
 	handler.svc = m
 
-	m.On("Handle", mock.Anything, mock.Anything).Return(
+	m.On("Get", mock.Anything, mock.Anything).Return(
 		nil, fmt.Errorf("some internal error"),
 	)
 
@@ -59,11 +60,11 @@ func Test_FoaasUnavailable(t *testing.T) {
 }
 
 func Test_FoaasOK(t *testing.T) {
-	handler := NewMessageHandler()
+	handler := NewMessageHandler(logrus.New())
 	m := &serviceMock{}
 	handler.svc = m
 
-	m.On("Handle", mock.Anything, mock.Anything).Return(
+	m.On("Get", mock.Anything, mock.Anything).Return(
 		&foaas.Payload{Message: "a message", Subtitle: "a subtitle"},
 		nil,
 	)

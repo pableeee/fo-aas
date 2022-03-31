@@ -52,7 +52,7 @@ func (s *Server) registerHandlers(ctx context.Context) {
 	s.registerMiddlewares(domainSubrouter)
 
 	// register domain endpoints
-	domainSubrouter.Handle("/message", handlers.NewMessageHandler()).Methods("GET")
+	domainSubrouter.Handle("/message", handlers.NewMessageHandler(s.logger)).Methods("GET")
 }
 
 func (s *Server) JSONResponse(w http.ResponseWriter, r *http.Request, result interface{}, responseCode int) {

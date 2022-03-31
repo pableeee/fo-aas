@@ -3,22 +3,26 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+
 	"net/http"
 
 	"github.com/pableeee/fo-aas/pkg/foaas"
+	log "github.com/sirupsen/logrus"
 )
 
 type MessageHandler struct {
-	svc Service
+	svc    Service
+	logger *log.Logger
 }
 
 type Service interface {
 	Get(ctx context.Context, user string) (*foaas.Payload, error)
 }
 
-func NewMessageHandler() *MessageHandler {
+func NewMessageHandler(logger *log.Logger) *MessageHandler {
 	return &MessageHandler{
-		svc: foaas.New(),
+		svc:    foaas.New(logger),
+		logger: logger,
 	}
 }
 
@@ -29,6 +33,7 @@ func (m *MessageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	res, err := m.svc.Get(r.Context(), user[0])
 	if err != nil {
 		// upstream request failed
+		m.logger.Infof("foaas service failed %s", err.Error())
 		w.WriteHeader(http.StatusServiceUnavailable)
 
 		return
@@ -36,6 +41,7 @@ func (m *MessageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	body, err := json.Marshal(res)
 	if err != nil {
+		m.logger.Errorf("error masharling response %s", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 
 		return

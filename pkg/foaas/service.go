@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	http_client "github.com/pableeee/fo-aas/pkg/http"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -27,14 +29,23 @@ type httpClient interface {
 
 type Service struct {
 	client httpClient
+	logger *log.Logger
 }
 
-func New() *Service {
+func New(logger *log.Logger) *Service {
 	return &Service{
 		client: http_client.New(&http_client.Options{
-			// no outgoing client rate limit to enforce
-			MaxRPM: 0,
-		}),
+			// CB config
+			ErrorThreshold:   5,
+			SuccessThreshold: 1,
+			Timeout:          10 * time.Second,
+			// Transport config
+			MaxIdleConns:        100,
+			MaxConnsPerHost:     1000,
+			MaxIdleConnsPerHost: 100,
+			IdleConnTimeout:     5 * time.Second,
+		}, logger),
+		logger: logger,
 	}
 }
 
@@ -45,10 +56,14 @@ func (s *Service) Get(ctx context.Context, user string) (*Payload, error) {
 	res, err := s.client.Execute(ctx, http.MethodGet, url, nil, headers)
 
 	if err != nil {
+		s.logger.Infof("unable to complete http request %s", err.Error())
+
 		return nil, fmt.Errorf("unable to complete http request %w", err)
 	}
 
 	if err = json.Unmarshal([]byte(res), &msg); err != nil {
+		s.logger.Infof("unable to unmarshall reponse payload %s", err.Error())
+
 		return nil, fmt.Errorf("unable to unmarshall reponse payload %w", err)
 	}
 
