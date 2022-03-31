@@ -16,8 +16,9 @@ type RateLimiterMiddleware struct {
 
 // NewRateLimiterMiddleware creates a new http middleware that honors the provided limit.
 func NewRateLimiterMiddleware(maxRMP int) *RateLimiterMiddleware {
+	lim := ratelimiter.New(maxRMP)
 	return &RateLimiterMiddleware{
-		limiter: ratelimiter.New(maxRMP),
+		limiter: ratelimiter.MewMetricMiddleware(lim),
 	}
 }
 
