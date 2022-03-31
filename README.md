@@ -2,7 +2,7 @@
 
 fo-aas provide a proxy server to foaas, by connecting and fetching its response. It enforces user based throttling for incomming requests and provides basic RED metrics.
 
-Authorization was out the scope of this implementation, so the applicaiton expects a specific HTTP header `"User"` with the user identifier, otherwise the request es reject.
+Authorization was out the scope of this implementation, so the applicaiton expects a specific HTTP header `"User"` with the user identifier, otherwise the request is reject.
 
 The implementation of the rate limiting is session based. Every user has a quota of tokens (requests), that can be consumed within a session. Sessions have fixed length and on expiration, tokens are re-allocated.
 
@@ -23,10 +23,18 @@ make build-docker
 make run
 ```
 
+### to run it with custom flags
+```bash
+make build-docker
+make start-deps
+docker run -p 8080:8080 -d fo-aas -session-length 1000 -tokens 10 -timeout 3000
+```
+
 Sample execution
 
 ```bash
 curl 'http://localhost:8080/message' -H "User: pable"
+{"message":"Fascinating story, in what chapter do you shut the f... up?","subtitle":"- pable"
 ```
 
 ## Metrics
