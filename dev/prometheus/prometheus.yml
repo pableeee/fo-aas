@@ -1,0 +1,11 @@
+scrape_configs:
+  # scrapes itself
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+  # scrapes our event receiver app for metrics
+  - job_name: foaas
+    scrape_interval: 10s
+    static_configs:
+      - targets:
+          - host.docker.internal:8080
