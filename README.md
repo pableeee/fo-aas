@@ -12,7 +12,7 @@ The app expects the following flags
 
 - `host` : listen interface. (def: `"0.0.0.0"`)
 - `port` : port to listen on. (def: `8080`)
-- `session-length` : amount of time until the session expires in milliseconds  (def: `1000` requests per second)
+- `session-length` : amount of time until the session expires in milliseconds  (def: `1000` m sec)
 - `tokens` : amount of tokens available per user by session (def: `1000`)
 - `timeout` : timeout in milleconds to establish a connection with foaas (def: `3000` m sec)
 
@@ -34,7 +34,7 @@ Sample execution
 
 ```bash
 curl 'http://localhost:8080/message' -H "User: pable"
-{"message":"Fascinating story, in what chapter do you shut the f... up?","subtitle":"- pable"
+{"message":"Fascinating story, in what chapter do you shut the f... up?","subtitle":"- pable"}
 ```
 
 ## Metrics
