@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 	"time"
 
@@ -8,7 +9,7 @@ import (
 )
 
 type RateLimiter interface {
-	Allow(user string) bool
+	Allow(ctx context.Context, user string) bool
 }
 
 type RateLimiterMiddleware struct {
@@ -27,13 +28,16 @@ func (p *RateLimiterMiddleware) Handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		values := r.Header
 		user, found := values["User"]
+		ctx, cancel := context.WithTimeout(r.Context(), time.Duration(500)*time.Millisecond)
+		defer cancel()
+
 		if !found {
 			w.WriteHeader(http.StatusUnauthorized)
 
 			return
 		}
 
-		if !p.limiter.Allow(user[0]) {
+		if !p.limiter.Allow(ctx, user[0]) {
 			w.WriteHeader(http.StatusTooManyRequests)
 
 			return
