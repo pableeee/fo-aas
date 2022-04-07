@@ -2,6 +2,8 @@ version: "3.8"
 volumes:
   prometheus_data: {}
   grafana_data: {}
+  redis_data:
+    driver: local
 
 services:
   prometheus:
@@ -33,3 +35,11 @@ services:
       - 3000:3000
     depends_on:
       - prometheus
+  redis:
+    image: redis:6.2-alpine
+    restart: always
+    ports:
+      - 6379:6379
+    command: redis-server --save 20 1 --loglevel warning --requirepass foobar
+    volumes:
+      - redis_data:/data
