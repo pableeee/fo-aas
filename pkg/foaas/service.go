@@ -37,15 +37,17 @@ type Service struct {
 }
 
 func New(opt *Options, logger *log.Logger) *Service {
+	client := http_client.New(&http_client.Options{
+		// Transport config
+		Timeout:             opt.Timeout,
+		MaxIdleConns:        100,
+		MaxConnsPerHost:     1000,
+		MaxIdleConnsPerHost: 100,
+		IdleConnTimeout:     5 * time.Second,
+	}, logger)
+
 	return &Service{
-		client: http_client.New(&http_client.Options{
-			// Transport config
-			Timeout:             opt.Timeout,
-			MaxIdleConns:        100,
-			MaxConnsPerHost:     1000,
-			MaxIdleConnsPerHost: 100,
-			IdleConnTimeout:     5 * time.Second,
-		}, logger),
+		client: newTracingMiddleware(client),
 		logger: logger,
 	}
 }
