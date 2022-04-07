@@ -13,8 +13,14 @@ const (
 	tokensKey  = "tokens:%s"
 )
 
+type redisClient interface {
+	SetNX(ctx context.Context, key string, value interface{}, expiration time.Duration) *redis.BoolCmd
+	Set(ctx context.Context, key string, value interface{}, expiration time.Duration) *redis.StatusCmd
+	Decr(ctx context.Context, key string) *redis.IntCmd
+}
+
 type RedisTokenRateLimiter struct {
-	client *redis.Client
+	client redisClient
 	every  time.Duration
 	limit  int
 }
@@ -38,7 +44,7 @@ func New(opt *Option) (*RedisTokenRateLimiter, error) {
 	}
 
 	return &RedisTokenRateLimiter{
-		client: rdb,
+		client: newTracingMiddleware(rdb),
 		every:  opt.Every,
 		limit:  opt.Tokens,
 	}, nil

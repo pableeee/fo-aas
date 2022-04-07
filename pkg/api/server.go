@@ -87,6 +87,13 @@ func (s *Server) registerMiddlewares(router *mux.Router) {
 	prom := middleware.PrometheusMetricsMiddleware(s.config.Hostname)
 	router.Use(prom.Handler)
 
+	// tracing middleware
+	router.Use(
+		func(h http.Handler) http.Handler {
+			return middleware.TracingMiddleware(h)
+		},
+	)
+
 	// rate limiting middleware
 	limiter := middleware.NewRateLimiterMiddleware(s.config.Tokens, s.config.Every)
 	router.Use(limiter.Handler)
