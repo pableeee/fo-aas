@@ -67,9 +67,11 @@ func (t *tracingMiddleware) Decr(ctx context.Context, key string) *redis.IntCmd 
 	defer span.Finish()
 
 	res := t.delegate.Decr(ctx, key)
+	failed := false        
 	if _, err := res.Result(); err != nil {
-		span.SetTag("error", err.Error())
+		failed = true
 	}
+	span.SetTag("error", failed)
 
 	return res
 }
