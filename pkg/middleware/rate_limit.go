@@ -17,13 +17,24 @@ type RateLimiterMiddleware struct {
 	limiter RateLimiter
 }
 
+type Options struct {
+	// amount of tokens available per sessions.
+	Tokens int
+	// session lenght
+	Every time.Duration
+	// redis connection url. ie: "localhost:6379"
+	RedisAddr string
+	// redis password
+	Passwd string
+}
+
 // NewRateLimiterMiddleware creates a new http middleware that honors the provided limit.
-func NewRateLimiterMiddleware(tokens int, every time.Duration) *RateLimiterMiddleware {
+func NewRateLimiterMiddleware(opt *Options) *RateLimiterMiddleware {
 	lim, _ := redis.New(&redis.Option{
-		Tokens:   tokens,
-		Every:    every,
-		Addr:     "localhost:6379",
-		Password: "foobar",
+		Tokens:   opt.Tokens,
+		Every:    opt.Every,
+		Addr:     opt.RedisAddr,
+		Password: opt.Passwd,
 	})
 	return &RateLimiterMiddleware{
 		limiter: ratelimiter.MewMetricMiddleware(lim),
