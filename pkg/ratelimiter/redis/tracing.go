@@ -53,9 +53,11 @@ func (t *tracingMiddleware) Set(ctx context.Context, key string, value interface
 	defer span.Finish()
 
 	res := t.delegate.Set(ctx, key, value, expiration)
+	failed := false        
 	if _, err := res.Result(); err != nil {
-		span.SetTag("error", err.Error())
+		failed = true
 	}
+	span.SetTag("error", failed)
 
 	return res
 }
