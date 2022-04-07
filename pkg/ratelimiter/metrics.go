@@ -1,6 +1,7 @@
 package ratelimiter
 
 import (
+	"context"
 	"time"
 
 	"github.com/go-kit/kit/metrics"
@@ -9,7 +10,7 @@ import (
 )
 
 type allower interface {
-	Allow(user string) bool
+	Allow(ctx context.Context, user string) bool
 }
 
 type MetricsMiddleware struct {
@@ -28,7 +29,7 @@ func MewMetricMiddleware(next allower) *MetricsMiddleware {
 	return &MetricsMiddleware{histogram: histogram, next: next}
 }
 
-func (m *MetricsMiddleware) Allow(user string) bool {
+func (m *MetricsMiddleware) Allow(ctx context.Context, user string) bool {
 	begin := time.Now()
 
 	defer func() {
@@ -36,5 +37,5 @@ func (m *MetricsMiddleware) Allow(user string) bool {
 		m.histogram.Observe(took.Seconds())
 	}()
 
-	return m.next.Allow(user)
+	return m.next.Allow(ctx, user)
 }

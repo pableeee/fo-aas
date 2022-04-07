@@ -8,6 +8,8 @@ import (
 	"syscall"
 
 	"github.com/oklog/run"
+	"github.com/opentracing/opentracing-go"
+	jaegercfg "github.com/uber/jaeger-client-go/config"
 
 	"github.com/sirupsen/logrus"
 )
@@ -59,4 +61,24 @@ func getLogger(logLevel string) (*logrus.Logger, error) {
 	logger.SetReportCaller(true)
 
 	return logger, nil
+}
+
+func configureJaeger() error {
+	cfg, err := jaegercfg.FromEnv()
+	if cfg.ServiceName == "" {
+		return fmt.Errorf("could not init jaeger tracer without ServiceName")
+	}
+
+	if err != nil {
+		return fmt.Errorf("could not parse Jaeger env vars: %w", err)
+	}
+
+	tracer, _, err := cfg.NewTracer()
+	if err != nil {
+		return fmt.Errorf("could not initialize jaeger tracer: %w", err)
+	}
+
+	opentracing.SetGlobalTracer(tracer)
+
+	return nil
 }

@@ -1,6 +1,7 @@
 package ratelimiter
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -35,10 +36,10 @@ func TestRateLimiter_FirstRequest(t *testing.T) {
 	mockClock(limiter, "2000-01-01T00:00:00.000Z")
 
 	// first requests from any user should always be allowed.
-	assert.True(t, limiter.Allow("pable"))
-	assert.True(t, limiter.Allow("fable"))
-	assert.True(t, limiter.Allow("table"))
-	assert.True(t, limiter.Allow("mable"))
+	assert.True(t, limiter.Allow(context.TODO(), "pable"))
+	assert.True(t, limiter.Allow(context.TODO(), "fable"))
+	assert.True(t, limiter.Allow(context.TODO(), "table"))
+	assert.True(t, limiter.Allow(context.TODO(), "mable"))
 }
 
 func TestRateLimiter_LimitReachead(t *testing.T) {
@@ -49,13 +50,13 @@ func TestRateLimiter_LimitReachead(t *testing.T) {
 	// "2000-01-01T00:00:00.100Z" being when the user was first seen.
 	for i := 10; i < 20; i++ {
 		mockClock(limiter, fmt.Sprintf("2000-01-01T00:00:00.%d0Z", i))
-		assert.True(t, limiter.Allow("pable"))
+		assert.True(t, limiter.Allow(context.TODO(), "pable"))
 	}
 
 	// the 11th token withing a second, musn't be allowed.
 	mockClock(limiter, "2000-01-01T00:00:00.210Z")
 	// user is throttled
-	assert.False(t, limiter.Allow("pable"))
+	assert.False(t, limiter.Allow(context.TODO(), "pable"))
 }
 
 func TestRateLimiter_ReachLimit_SameTS(t *testing.T) {
@@ -64,13 +65,13 @@ func TestRateLimiter_ReachLimit_SameTS(t *testing.T) {
 	// a limit of 10 tokens should be allowed on a second
 	for i := 0; i < 10; i++ {
 		mockClock(limiter, "2000-01-01T00:00:00.100Z")
-		assert.True(t, limiter.Allow("pable"))
+		assert.True(t, limiter.Allow(context.TODO(), "pable"))
 	}
 
 	// the 11th token withing the same second, musn't be allowed.
 	mockClock(limiter, "2000-01-01T00:00:00.100Z")
 	// user is throttled
-	assert.False(t, limiter.Allow("pable"))
+	assert.False(t, limiter.Allow(context.TODO(), "pable"))
 }
 
 func TestRateLimiter_AllowedAfterBlocked(t *testing.T) {
@@ -82,13 +83,13 @@ func TestRateLimiter_AllowedAfterBlocked(t *testing.T) {
 		date := fmt.Sprintf("2000-01-01T00:00:00.%d00Z", i)
 		mockClock(limiter, date)
 
-		assert.True(t, limiter.Allow("pable"))
+		assert.True(t, limiter.Allow(context.TODO(), "pable"))
 	}
 
 	// the 11th token withing the same second, musn't be allowed.
 	mockClock(limiter, "2000-01-01T00:00:00.900Z")
 	// user is throttled
-	assert.False(t, limiter.Allow("pable"))
+	assert.False(t, limiter.Allow(context.TODO(), "pable"))
 
 	// one second after the first event, the session shoud have expired.
 	// up to extra 10 have to be available again
@@ -96,7 +97,7 @@ func TestRateLimiter_AllowedAfterBlocked(t *testing.T) {
 		date := fmt.Sprintf("2000-01-01T00:00:01.%d00Z", i)
 		mockClock(limiter, date)
 
-		assert.True(t, limiter.Allow("pable"))
+		assert.True(t, limiter.Allow(context.TODO(), "pable"))
 	}
 }
 
@@ -109,18 +110,18 @@ func TestRateLimiter_ReachLimit_AllowedOtherUser(t *testing.T) {
 		date := fmt.Sprintf("2000-01-01T00:00:00.%d00Z", i)
 		mockClock(limiter, date)
 
-		assert.True(t, limiter.Allow("pable"))
+		assert.True(t, limiter.Allow(context.TODO(), "pable"))
 	}
 
 	// the 11th token withing the same second, musn't be allowed.
 	mockClock(limiter, "2000-01-01T00:00:00.900Z")
 	// user is throttled
-	assert.False(t, limiter.Allow("pable"))
+	assert.False(t, limiter.Allow(context.TODO(), "pable"))
 
 	// since the rate limiting is user independent, 'pable' being throttled
 	// musn't affect user 'jon'
 	for i := 0; i < 10; i++ {
-		assert.True(t, limiter.Allow("jon"))
+		assert.True(t, limiter.Allow(context.TODO(), "jon"))
 	}
 
 }
