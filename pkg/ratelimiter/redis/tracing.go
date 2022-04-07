@@ -39,9 +39,11 @@ func (t *tracingMiddleware) SetNX(ctx context.Context, key string, value interfa
 	defer span.Finish()
 
 	res := t.delegate.SetNX(ctx, key, value, expiration)
+	failed := false        
 	if _, err := res.Result(); err != nil {
-		span.SetTag("error", err.Error())
+		failed = true
 	}
+	span.SetTag("error", failed)
 
 	return res
 }
