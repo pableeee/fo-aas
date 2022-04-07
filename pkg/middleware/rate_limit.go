@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/pableeee/fo-aas/pkg/ratelimiter"
+	"github.com/pableeee/fo-aas/pkg/ratelimiter/redis"
 )
 
 type RateLimiter interface {
@@ -18,7 +19,12 @@ type RateLimiterMiddleware struct {
 
 // NewRateLimiterMiddleware creates a new http middleware that honors the provided limit.
 func NewRateLimiterMiddleware(tokens int, every time.Duration) *RateLimiterMiddleware {
-	lim := ratelimiter.New(tokens, every)
+	lim, _ := redis.New(&redis.Option{
+		Tokens:   tokens,
+		Every:    every,
+		Addr:     "localhost:6379",
+		Password: "foobar",
+	})
 	return &RateLimiterMiddleware{
 		limiter: ratelimiter.MewMetricMiddleware(lim),
 	}
@@ -28,7 +34,7 @@ func (p *RateLimiterMiddleware) Handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		values := r.Header
 		user, found := values["User"]
-		ctx, cancel := context.WithTimeout(r.Context(), time.Duration(500)*time.Millisecond)
+		ctx, cancel := context.WithTimeout(r.Context(), time.Duration(500)*time.Second)
 		defer cancel()
 
 		if !found {
