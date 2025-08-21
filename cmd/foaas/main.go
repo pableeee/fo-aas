@@ -16,13 +16,15 @@ const (
 
 func Run() {
 	var (
-		logLevel = flag.String("loglevel", "debug", "logging level threshold")
-		host     = flag.String("host", "0.0.0.0", "listen interface for http server")
-		port     = flag.String("port", "8080", "http server port")
-		every    = flag.Int("session-length", 1000, "lenght of the session (ms)")
-		tokens   = flag.Int("tokens", 1000, "tokes availabe per session")
-		timeout  = flag.Int("timeout", 3000, "connection timeout duration for request to foaas service (ms)")
-		group    = run.Group{}
+		logLevel  = flag.String("loglevel", "debug", "logging level threshold")
+		host      = flag.String("host", "0.0.0.0", "listen interface for http server")
+		port      = flag.String("port", "8080", "http server port")
+		redisURL  = flag.String("redis-url", "localhost:6379", "redis connection url")
+		redisPass = flag.String("redis-passwd", "foobar", "redis user password")
+		every     = flag.Int("session-length", 1000, "lenght of the session (ms)")
+		tokens    = flag.Int("tokens", 10, "tokes availabe per session")
+		timeout   = flag.Int("timeout", 30000, "connection timeout duration for request to foaas service (ms)")
+		group     = run.Group{}
 	)
 
 	flag.Parse()
@@ -30,6 +32,10 @@ func Run() {
 	logger, err := getLogger(*logLevel)
 	if err != nil {
 		log.Fatalf("unable to get logger")
+	}
+
+	if err := configureJaeger(); err != nil {
+		log.Fatalf("unable to configure jaeger: %s", err.Error())
 	}
 
 	srv := api.NewServer(&api.Config{
@@ -41,6 +47,8 @@ func Run() {
 		Every:                     time.Millisecond * time.Duration(*every),
 		Tokens:                    *tokens,
 		Timeout:                   time.Millisecond * time.Duration(*timeout),
+		RedisAddr:                 *redisURL,
+		Passwd:                    *redisPass,
 	}, logger)
 
 	// adds signal handler

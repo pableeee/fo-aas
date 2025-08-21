@@ -33,6 +33,10 @@ type Config struct {
 	Tokens                    int
 	Every                     time.Duration
 	Timeout                   time.Duration
+	// redis connection url. ie: "localhost:6379"
+	RedisAddr string
+	// redis password
+	Passwd string
 }
 
 func NewServer(c *Config, l *log.Logger) *Server {
@@ -87,8 +91,22 @@ func (s *Server) registerMiddlewares(router *mux.Router) {
 	prom := middleware.PrometheusMetricsMiddleware(s.config.Hostname)
 	router.Use(prom.Handler)
 
+	// tracing middleware
+	router.Use(
+		func(h http.Handler) http.Handler {
+			return middleware.TracingMiddleware(h)
+		},
+	)
+
 	// rate limiting middleware
-	limiter := middleware.NewRateLimiterMiddleware(s.config.Tokens, s.config.Every)
+	limiter := middleware.NewRateLimiterMiddleware(
+		&middleware.Options{
+			Tokens:    s.config.Tokens,
+			Every:     s.config.Every,
+			RedisAddr: s.config.RedisAddr,
+			Passwd:    s.config.Passwd},
+	)
+
 	router.Use(limiter.Handler)
 }
 
